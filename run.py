@@ -5,6 +5,11 @@ from models import User, Post, Like, Comment
 from setup import Handler, salt, webapp2
 
 
+class Base(Handler):
+    def get(self):
+        self.redirect('/welcome')
+
+
 class Signup(Handler):
     def get(self):
         self.render("signup.html")
@@ -177,7 +182,8 @@ class LikePost(Handler):
             return self.write('failed')
 
 
-app = webapp2.WSGIApplication([(r'/signup', Signup),
+app = webapp2.WSGIApplication([(r'/?', Base),
+                               (r'/signup', Signup),
                                (r'/welcome/?', Welcome),
                                (r'/logout/?', Logout),
                                (r'/newpost/?', PostPage),
