@@ -1,7 +1,7 @@
 # - * - coding: utf-8 - *
 import hmac
 import re
-from models import User, Post, Likes
+from models import User, Post, Like, Comment
 from setup import Handler, salt, webapp2
 
 
@@ -37,7 +37,8 @@ class Signup(Handler):
                                **errors)
         else:
             hash_string = hmac.new(salt, username).hexdigest()
-            self.set_cookie(self.user_cookie, '{0}|{1}'.format(username, hash_string))
+            self.set_cookie(self.user_cookie, '{0}|{1}'.format(
+                                username, hash_string))
             # add to db
             hpass = hmac.new(salt, password).hexdigest()
             user = User(username=username, password=hpass, email=email)
@@ -49,13 +50,12 @@ class Welcome(Handler):
     def get(self):
         name = self.isvalid()
         error = self.request.cookies.get(self.error_cookie, False)
-        print self.request.cookies
         if error:
             self.set_cookie(self.error_cookie, '')
         user = User.all().filter('username =', name).get()
         posts = Post.all().order('-datetime')
         user_liked = {}
-        for l in Likes.all().filter('user =', user):
+        for l in Like.all().filter('user =', user):
             pid = l.post.key().id()
             user_liked[pid] = 'liked'
         self.render("welcome.html",
@@ -67,20 +67,27 @@ class Welcome(Handler):
 
 class ShowPost(Handler):
     def get(self, post_id):
-        name = self.isvalid()
+        self.isvalid()
         pid = int(post_id)
         post = Post.get_by_id(pid)
-        user = User.all().filter('username =', name).get()
-        total_likes = Likes.all().filter('post =', post)
-        liked = True if total_likes.filter('user =', user) else False
-        likes = len(list(total_likes))
+        comments = Comment.all().filter('post =', post).order('-datetime')
+        total_likes = Like.all().filter('post =', post).count()
         if post:
             self.render("show.html",
                         post=post,
-                        liked=liked,
-                        likes=likes)
+                        likes=total_likes,
+                        comments=comments)
         else:
-            self.render("show.html", error="No such blog :(")
+            self.render("show.html", error="No post lives here :(")
+
+    def post(self, post_id):
+        name = self.isvalid()
+        user = User.all().filter('username =', name).get()
+        post = Post.get_by_id(int(post_id))
+        c = self.request.get('comment').strip()
+        comment = Comment(user=user, post=post, body=c)
+        comment.put()
+        self.redirect('/' + post_id)
 
 
 class EditPost(Handler):
@@ -98,9 +105,10 @@ class EditPost(Handler):
         post = Post.get_by_id(int(post_id))
         if post.author.username == name:
             if self.request.get('delete'):
-                likes = Likes.all().filter('post = ', post)
-                if likes:
-                    [l.delete() for l in likes]
+                likes = Like.all().filter('post = ', post)
+                comments = Like.all().filter('post = ', post)
+                [l.delete() for l in likes]
+                [c.delete() for c in comments]
                 post.delete()
             else:
                 post.post = self.request.get('post').strip()
@@ -150,19 +158,19 @@ class Logout(Handler):
         self.redirect('/signup')
 
 
-class LikesPost(Handler):
+class LikePost(Handler):
     def post(self, post_id):
         name = self.isvalid()
         post = Post.get_by_id(int(post_id))
         if name != post.author.username:
             user = User.all().filter('username = ', name).get()
-            like = Likes.all().filter(
+            like = Like.all().filter(
                     'post =', post).filter(
                         'user =', user).get()
             if like:
                 like.delete()
             else:
-                like = Likes(user=user, post=post)
+                like = Like(user=user, post=post)
                 like.put()
             return self.write('success')
         else:
@@ -175,6 +183,6 @@ app = webapp2.WSGIApplication([(r'/signup', Signup),
                                (r'/newpost/?', PostPage),
                                (r'/([0-9]+)/?', ShowPost),
                                (r'/edit/([0-9]+)/?', EditPost),
-                               (r'/like/([0-9]+)/?', LikesPost),
+                               (r'/like/([0-9]+)/?', LikePost),
                                (r'/login/?', Login)],
                               debug=True)
