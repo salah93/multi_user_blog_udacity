@@ -1,15 +1,37 @@
 {% extends "logout.html" %}
 
 {% block content %}
+	<a href="/welcome" class="btn btn-default">Home Page</a>
 		{% if error %}
 			<h1>{{error}}</h1>
+		{% elif post %}
+			<div class="post">
+				<h1>{{ post.title }}</h1>
+				<h5>{{likes}} like(s)</h5>
+				<hr>
+				<p>{{post.post}}</p>
+				<p>by: {{post.author.username}}</p>
+				<i>{{post.datetime}}</i>
+			</div>
+			<hr>
+			<h2>Comments</h2>
+			<div class="add-comment">
+				<form method="post">
+					<textarea rows=2 class="form-control" name="comment"></textarea>
+					<input class="form-control submit" type="submit">
+				</form>
+			</div>
+			<div class="comments-div">
+				{% for comment in comments %}
+					<hr>
+					<div class="comment">
+						<p>{{comment.body}}</p>
+						<p>by: {{comment.user.username}}</p>	
+						<i>{{comment.datetime}}</i>	
+					</div>	
+				{% endfor %}
+			</div>
 		{% else %}
-		<h1>{{ post.title }}</h1>
-		<p>by: {{post.author.username}}</p>
-        <h5>{{likes}} like(s)</h5>
-        <hr>
-		<p>{{post.post}}</p>
-		<i>{{post.datetime}}</i>
+			<h1>No post here buttface (_|_)</h1>
 		{% endif %}
 {% endblock %}
-
