@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+
+{% block login %}
+		<a href="/login" class="btn btn-default">sign in</a>	
+		<h1>Signup</h1>
+		<form action="/signup" method="post">
+			<label for="username"> Username
+				<input value="{{ user }}" class="form-control" name="username">
+			</label>
+			{% if user_error %} <span class="error">User error</span> {% elif unique_error %} <span class="error">Username already exists</span> {% endif %}
+			<br>
+			<label  for="password"> Password
+				<input type="password" class="form-control" name="password">
+			</label>
+			{% if password_error %} <span class="error">Password error</span> {% endif %}
+			<br>
+			<label for="verify"> Verify Password
+				<input type="password" class="form-control" name="verify">
+			</label>
+			{% if verify_error %} <span class=error">Passwords don't match </span>{% endif %}
+			<br>
+			<label for="email">Email (optional)
+				<input value="{{ email }}" class="form-control" name="email" type="text">
+			</label><br>
+			<input class="btn" type="submit">
+		</form>
+{% endblock %}

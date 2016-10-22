@@ -1,0 +1,11 @@
+{% extends "logout.html" %}
+
+{% block content %}
+		<h1>Edit post</h1>
+		<form action="/edit/{{post.key().id()}}" method="post">
+			<input value="{{post.title}}" name=title class="form-control">
+			<textarea name="post" class="form-control" rows=10>{{post.post}}</textarea>
+			<input type="submit" value="Update">
+			<button value="delete" class="btn btn-default" name="delete">Delete</button>
+		</form>
+{% endblock %}

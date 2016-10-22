@@ -1,0 +1,15 @@
+{% extends "logout.html" %}
+
+{% block content %}
+		{% if error %}
+			<h1>{{error}}</h1>
+		{% else %}
+		<h1>{{ post.title }}</h1>
+		<p>by: {{post.author.username}}</p>
+        <h5>{{likes}} like(s)</h5>
+        <hr>
+		<p>{{post.post}}</p>
+		<i>{{post.datetime}}</i>
+		{% endif %}
+{% endblock %}
+

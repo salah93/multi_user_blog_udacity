@@ -1,0 +1,52 @@
+{% extends "logout.html" %}
+
+{% block content %}
+	<h1>Welcome, <span class="user">{{ user }}</span>!</h1>
+    {% if error %}
+        <span class="error">You can only edit your own posts!</span>
+    {% endif %}
+	<h3><a href="/newpost">Submit a post</a></h3>
+		<button id="liked_posts" class="btn btn-default">Liked Posts</button>
+		<button id="all_posts" type="button" class="active btn btn-default">All Posts</button>
+	{% for post in posts %}
+		<div class="post {{liked.get(post.key().id(), 'unliked')}}-div">
+			<a href="/{{ post.key().id() }}">
+                <span class="title">{{ post.title }}</span> 
+                - 
+                <span class="author">{{ post.author.username }}</span>
+            </a>
+			<p><i>{{ post.datetime }}</i></p>
+			<button value="{{ post.key().id() }}" class="btn like-btn {{liked[post.key().id()]}}">{{liked.get(post.key().id(), 'like')}}</button>
+			<a class="edit" value="{{ post.author.username }}" href="/edit/{{ post.key().id() }}">Edit/Delete</a>
+		<hr>
+		</div>
+	{% endfor %}
+{% endblock %}
+{% block scripts %}
+	<script>
+		$('.like-btn').click(function() {
+            //$(this) = $(this)
+			$(this).toggleClass('liked')
+			if ( $(this).hasClass('liked') ) {
+				$(this).text("liked")	
+			}
+			else {
+				$(this).text("like")	
+			}
+            $.post('/like/' + $(this).val());
+            $(this).parent().toggleClass('unliked-div');
+		});	
+        
+		$('#liked_posts').click(function() {
+			$('.unliked-div').hide();
+			$(this).addClass('active')
+			$('#all_posts').removeClass('active')
+		});
+		$('#all_posts').click(function() {
+			$('.unliked-div').show();
+			$(this).addClass('active')
+			$('#liked_posts').removeClass('active')
+		});
+    
+	</script>
+{% endblock %}

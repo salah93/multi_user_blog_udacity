@@ -1,0 +1,18 @@
+{% extends "logout.html" %}
+
+{% block content %}
+		<h1> Submit your post </h1>
+		<form method="POST">
+			<label>
+				Title
+				<input value="{{ title }}" class="form-control" name="subject" type="text">
+			</label>
+			<br>
+			<label>
+				Post
+				<textarea class="form-control" name="content">{{ post }}</textarea>
+			</label>
+			<br>
+			<input type="submit" class="btn">
+		</form>
+{% endblock %}
