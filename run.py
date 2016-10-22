@@ -37,7 +37,7 @@ class Signup(Handler):
                                **errors)
         else:
             hash_string = hmac.new(salt, username).hexdigest()
-            self.set_cookie('user', '{0}|{1}'.format(username, hash_string))
+            self.set_cookie(self.user_cookie, '{0}|{1}'.format(username, hash_string))
             # add to db
             hpass = hmac.new(salt, password).hexdigest()
             user = User(username=username, password=hpass, email=email)
@@ -48,10 +48,10 @@ class Signup(Handler):
 class Welcome(Handler):
     def get(self):
         name = self.isvalid()
-        error = self.request.cookies.get('error', False)
+        error = self.request.cookies.get(self.error_cookie, False)
         print self.request.cookies
         if error:
-            self.set_cookie('error', '')
+            self.set_cookie(self.error_cookie, '')
         user = User.all().filter('username =', name).get()
         posts = Post.all().order('-datetime')
         user_liked = {}
@@ -90,7 +90,7 @@ class EditPost(Handler):
         if post.author.username == name:
             self.render('edit.html', post=post)
         else:
-            self.set_cookie('error', True)
+            self.set_cookie(self.error_cookie, True)
             self.redirect('/welcome')
 
     def post(self, post_id):
@@ -107,7 +107,7 @@ class EditPost(Handler):
                 post.title = self.request.get('title').strip()
                 post.put()
         else:
-            self.set_cookie('error', True)
+            self.set_cookie(self.error_cookie, True)
         self.redirect('/welcome')
 
 
@@ -138,7 +138,7 @@ class Login(Handler):
                         'password =', hpass).get()
         if valid:
             hname = hmac.new(salt, username).hexdigest()
-            self.set_cookie('user', '{0}|{1}'.format(username, hname))
+            self.set_cookie(self.user_cookie, '{0}|{1}'.format(username, hname))
             return self.redirect('/welcome')
         else:
             return self.render('login.html', login_error=True)
@@ -146,7 +146,7 @@ class Login(Handler):
 
 class Logout(Handler):
     def get(self):
-        self.set_cookie('user', '')
+        self.set_cookie(self.user_cookie, '')
         self.redirect('/signup')
 
 
