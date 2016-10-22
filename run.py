@@ -154,16 +154,19 @@ class LikesPost(Handler):
     def post(self, post_id):
         name = self.isvalid()
         post = Post.get_by_id(int(post_id))
-        user = User.all().filter('username = ', name).get()
-        like = Likes.all().filter(
-                'post =', post).filter(
-                    'user =', user).get()
-        if like:
-            like.delete()
+        if name != post.author.username:
+            user = User.all().filter('username = ', name).get()
+            like = Likes.all().filter(
+                    'post =', post).filter(
+                        'user =', user).get()
+            if like:
+                like.delete()
+            else:
+                like = Likes(user=user, post=post)
+                like.put()
+            return self.write('success')
         else:
-            like = Likes(user=user, post=post)
-            like.put()
-        return self.write(str(200))
+            return self.write('failed')
 
 
 app = webapp2.WSGIApplication([(r'/signup', Signup),
