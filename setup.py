@@ -2,15 +2,24 @@ from os.path import join, dirname
 import webapp2
 import hmac
 import jinja2
+from sensitive import salt
+from models import User
 
+
+class InvalidUserException(Exception):
+    pass
 
 template_dir = join(dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
                                autoescape=True)
-salt = 'fROUtlLGeD947zXM'
 
 
 class Handler(webapp2.RequestHandler):
+    def __init__(self, request, response):
+        self.initialize(request, response)
+        self.user_cookie = 'user'
+        self.error_cookie = 'error'
+
     def set_cookie(self, name, value):
         v = str("{0}={1};Path=/".format(name, value))
         self.response.headers.add_header('Set-Cookie', v)
@@ -18,11 +27,16 @@ class Handler(webapp2.RequestHandler):
     def isvalid(self):
         try:
             user_cookie = self.request.cookies.get('user', False)
-            name, hname = user_cookie.split('|') if user_cookie else [None, None]
-            if name and hmac.new(salt, name).hexdigest() == hname:
+            name, hname = (user_cookie.split('|')
+                           if user_cookie
+                           else [None, None])
+            if (name and hmac.new(salt, name).hexdigest() == hname):
+                if not User.all().filter('username =', name).get():
+                    self.set_cookie(self.user_cookie, '')
+                    raise(InvalidUserException)
                 return name
             else:
-                raise(Exception)
+                raise(InvalidUserException)
         except:
             self.redirect('/signup')
 
