@@ -2,9 +2,11 @@
 
 {% block content %}
 	<h1>Welcome, <span class="user">{{ user }}</span>!</h1>
-    {% if error %}
-        <span class="error">You can only edit your own posts!</span>
-    {% endif %}
+	<span class="error">
+		{% if error %}
+			You can only edit your own posts!
+		{% endif %}
+	</span>
 	<h3><a href="/newpost">Submit a post</a></h3>
 		<button id="liked_posts" class="btn btn-default">Liked Posts</button>
 		<button id="all_posts" type="button" class="active btn btn-default">All Posts</button>
@@ -16,8 +18,8 @@
                 <span class="author">{{ post.author.username }}</span>
             </a>
 			<p><i>{{ post.datetime }}</i></p>
-			<button value="{{ post.key().id() }}" class="btn like-btn {{liked[post.key().id()]}}">{{liked.get(post.key().id(), 'like')}}</button>
-			<a class="edit" value="{{ post.author.username }}" href="/edit/{{ post.key().id() }}">Edit/Delete</a>
+			<button author="{{ post.author.username }}" value="{{ post.key().id() }}" class="btn like-btn {{liked[post.key().id()]}}">{{liked.get(post.key().id(), 'like')}}</button>
+			<a class="edit" href="/edit/{{ post.key().id() }}">Edit/Delete</a>
 		<hr>
 		</div>
 	{% endfor %}
@@ -25,16 +27,22 @@
 {% block scripts %}
 	<script>
 		$('.like-btn').click(function() {
-            //$(this) = $(this)
-			$(this).toggleClass('liked')
-			if ( $(this).hasClass('liked') ) {
-				$(this).text("liked")	
-			}
-			else {
-				$(this).text("like")	
-			}
-            $.post('/like/' + $(this).val());
-            $(this).parent().toggleClass('unliked-div');
+			var button = $(this)
+				$.post('/like/' + button.val(), function(data) {
+					if (data == 'success') {
+						button.toggleClass('liked')
+						if ( button.hasClass('liked') ) {
+							button.text("liked")	
+						}
+						else {
+							button.text("like")	
+						}
+						button.parent().toggleClass('unliked-div');
+					}
+					else {
+						$('.error').text("You can only like someone elses' posts!")
+					}
+				});
 		});	
         
 		$('#liked_posts').click(function() {
