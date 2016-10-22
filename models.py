@@ -14,7 +14,13 @@ class Post(db.Model):
     datetime = db.DateTimeProperty(auto_now_add=True)
 
 
-class Likes(db.Model):
+class Like(db.Model):
     user = db.ReferenceProperty(User, required=True)
     post = db.ReferenceProperty(Post, required=True)
 
+
+class Comment(db.Model):
+    user = db.ReferenceProperty(User, required=True)
+    post = db.ReferenceProperty(Post, required=True)
+    body = db.TextProperty(required=True)
+    datetime = db.DateTimeProperty(auto_now_add=True)
