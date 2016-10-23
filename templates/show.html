@@ -28,7 +28,7 @@
 					<div class="comment">
 						<hr>
 						<div hidden class="update-comment">
-							<textarea pid="{{post.key().id()}}" cid="{{ comment.key().id() }}" rows=2 class="form-control" name="new-comment"></textarea>
+							<textarea cid="{{ comment.key().id() }}" rows=2 class="form-control" name="new-comment"></textarea>
 							<button class="btn btn-default edit" name="update">update</button>
 							<button class="btn btn-default delete" name="delete">delete</button>
 						</div>
@@ -68,7 +68,7 @@
 								var comments = comments.comments
 								var l = comments.length
 								for (var i=0; i < l; i++) {
-									var html = "<div class='comment'><hr><div hidden class='update-comment'><textarea pid='" + textarea.attr('pid') + "' cid='" + comments[i].id + "' rows=2 class='form-control' name='new-comment'></textarea><button class='btn btn-default edit' name='update'>update</button><button class='btn btn-default delete' name='delete'>delete</button></div><div class='view-comment'><div class='comment-content'><p class='body'>" + comments[i].body + "</p><p class='username'>by: " + comments[i].username + "</p><i class='datetime'>" + comments[i].datetime + "</i></div>"
+									var html = "<div class='comment'><hr><div hidden class='update-comment'><textarea cid='" + comments[i].id + "' rows=2 class='form-control' name='new-comment'></textarea><button class='btn btn-default edit' name='update'>update</button><button class='btn btn-default delete' name='delete'>delete</button></div><div class='view-comment'><div class='comment-content'><p class='body'>" + comments[i].body + "</p><p class='username'>by: " + comments[i].username + "</p><i class='datetime'>" + comments[i].datetime + "</i></div>"
 									if (comments[i].username == currUser) {
 										html += "<button class='edit-comment btn btn-default'>edit/delete comment</button></div>"
 									}
@@ -84,46 +84,43 @@
 
 				$('.comments-div').click(function(data) {
 					var button = $(data.target)
-					var p = button.parent().parent()
-					var textarea = p.find('textarea')
-					var content = textarea.val()
-					var id = textarea.attr('cid')
 					if (button.hasClass('edit-comment')) {	
 						var content = button.prev().find('.body').text()
 						button.parent().hide()
 						button.parent().prev().show().find('textarea').val(content)
 					}
-				   else if (button.attr('name') =="update") {
-						$.ajax('/' + textarea.attr('pid'), {
-							method: "post",
-							dataType: "json",
-							data: {
-								'comment': content,
-								'id': id,
-								'update': true
-								}
-							}).done(function(result) {
-								// replace current comment with updated comment
-								if (result.error)
-									$('.error').html("You cannot edit other users' comments!")
-								else {
-									p.find('.comment-content').html("<p class='body'>" + result.body + "</p><p class='username'>by:" + result.username + "</p><i class='datetime'>" + result.datetime + "</i>")
-									$('.view-comment').show()
-									$('.update-comment').hide()
-								}
-						});
-					}
-					else if (button.attr('name') == 'delete'){
-						$.post('/' + textarea.attr('pid'), {
-								'id': id,
-								'delete': true
-								}, function(result) {
-								if(result == "success")
-									p.remove()	
-								else
-									$('.error').html("You cannot edit other users' comments!")
-						});
-					}
+				   else {
+						var p = button.parent().parent()
+						var textarea = p.find('textarea')
+						var id = textarea.attr('cid')
+						if (button.attr('name') =="update") {
+							var content = textarea.val()
+							$.ajax('/edit/comment/' + id, {
+								method: "post",
+								dataType: "json",
+								data: {
+									'comment': content
+									}
+								}).done(function(result) {
+									// replace current comment with updated comment
+									if (result.error)
+										$('.error').html("You cannot edit other users' comments!")
+									else {
+										p.find('.comment-content').html("<p class='body'>" + result.body + "</p><p class='username'>by:" + result.username + "</p><i class='datetime'>" + result.datetime + "</i>")
+										$('.view-comment').show()
+										$('.update-comment').hide()
+									}
+							});
+						}
+						else if (button.attr('name') == 'delete'){
+							$.post('/delete/comment/' + id, function(result) {
+									if(result == "success")
+										p.remove()	
+									else
+										$('.error').html("You cannot edit other users' comments!")
+							});
+						}
+				}
 				});
 			</script>
 			{% endblock %}

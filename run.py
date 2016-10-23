@@ -91,43 +91,50 @@ class ShowPost(Handler):
         name = self.isvalid()
         user = User.all().filter('username =', name).get()
         post = Post.get_by_id(int(post_id))
-        if self.request.get('update'):
-            comment = Comment.get_by_id(int(self.request.get('id')))
-            if name == comment.user.username:
-                comment.body = self.request.get('comment')
-                comment.put()
-                return self.write(json.dumps({'body': comment.body,
-                                              'datetime':
-                                              str(comment.datetime),
-                                              'username':
-                                              comment.user.username}))
-            else:
-                # show error
-                self.write("forbidden access")
-        elif self.request.get('delete'):
-            comment = Comment.get_by_id(int(self.request.get('id')))
-            if name == comment.user.username:
-                comment.delete()
-                return self.write("success")
-            else:
-                # show error
-                self.write("forbidden access")
-        else:
-            user_comment = self.request.get('comment').strip()
-            timestamp = datetime.now()
-            comment = Comment(user=user, post=post, body=user_comment)
+        user_comment = self.request.get('comment').strip()
+        timestamp = datetime.now()
+        comment = Comment(user=user, post=post, body=user_comment)
+        comment.put()
+        comments = Comment.all().filter('datetime >=', timestamp)
+        # datastore is sometimes slow to add objects to set
+        l = [c for c in comments if c != comment] + [comment]
+        return self.write(json.dumps({'comments': [{'body': c.body,
+                                                   'id': c.key().id(),
+                                                    'datetime':
+                                                    str(c.datetime),
+                                                    'username':
+                                                    c.user.username}
+                                                   for c in l],
+                                      'currentUser': name}))
+
+
+class EditComment(Handler):
+    def post(self, comment_id):
+        name = self.isvalid()
+        comment = Comment.get_by_id(int(comment_id))
+        if comment and name == comment.user.username:
+            comment.body = self.request.get('comment')
             comment.put()
-            comments = Comment.all().filter('datetime >=', timestamp)
-            # datastore is sometimes slow to add objects to set
-            l = [c for c in comments if c != comment] + [comment]
-            return self.write(json.dumps({'comments': [{'body': c.body,
-                                                        'id': c.key().id(),
-                                                        'datetime':
-                                                            str(c.datetime),
-                                                        'username':
-                                                            c.user.username}
-                                                       for c in l],
-                                          'currentUser': name}))
+            return self.write(json.dumps({'body': comment.body,
+                                          'datetime':
+                                          str(comment.datetime),
+                                          'username':
+                                          comment.user.username}))
+        else:
+            # show error
+            self.write("forbidden access")
+
+
+class DeleteComment(Handler):
+    def post(self, comment_id):
+        name = self.isvalid()
+        comment = Comment.get_by_id(int(comment_id))
+        if comment and name == comment.user.username:
+            comment.delete()
+            return self.write("success")
+        else:
+            # show error
+            self.write("forbidden access")
 
 
 class EditPost(Handler):
@@ -234,6 +241,8 @@ app = webapp2.WSGIApplication([(r'/?', Base),
                                (r'/([0-9]+)/?', ShowPost),
                                (r'/edit/([0-9]+)/?', EditPost),
                                (r'/delete/([0-9]+)/?', DeletePost),
+                               (r'/edit/comment/([0-9]+)/?', EditComment),
+                               (r'/delete/comment/([0-9]+)/?', DeleteComment),
                                (r'/like/([0-9]+)/?', LikePost),
                                (r'/login/?', Login)],
                               debug=True)
