@@ -11,7 +11,7 @@
 ```bash
 git clone https://github.com/salah93/multi_user_blog_udacity.git
 cd multi_user_blog_udacity
-cat <<EOF >> app.yml
+cat <<EOF >> temp.yml
 application:
 runtime: python27
 api_version: 1
@@ -25,7 +25,8 @@ libraries:
 - name: jinja2
 version: latest
 EOF
-sed -e 's/application:.*$/application: '"$APPID"'/' app.yml > app.yml
+sed -e 's/application:.*$/application: '"$APPID"'/' temp.yml > app.yml
+rm temp.yml
 ```
 
 #### local server
