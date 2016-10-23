@@ -26,8 +26,10 @@ libraries:
 version: latest
 EOF
 sed -e 's/application:.*$/application: '"$APPID"'/' app.yml > app.yml
-# local server
-/path/to/google_appengine/dev_appserver.py .
-# deploying app
-/path/to/google_appengine/appcfg.py -V v1 update ./
 ```
+
+#### local server
+`/path/to/google_appengine/dev_appserver.py .`
+
+#### deploying app
+`/path/to/google_appengine/appcfg.py -V v1 update ./`
