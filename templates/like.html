@@ -1,0 +1,26 @@
+{% extends "logout.html" %}
+
+{% block content %}{% endblock %}
+{% block scripts %}
+    <script>
+        $('.like-btn').click(function() {
+            var button = $(this)
+                $.post('/like/' + button.val(), function(data) {
+                    if (data == 'success') {
+                        button.toggleClass('liked')
+                            if ( button.hasClass('liked') ) {
+                                button.text("liked")    
+                            }
+                            else {
+                                button.text("like")    
+                            }
+                        button.parent().toggleClass('unliked-div');
+                    }
+                    else {
+                        $('.error').text("You can only like someone elses' posts!")
+                    }
+                });
+        });    
+    </script>
+    {%block like_scripts %}{%endblock%}
+{% endblock %}
