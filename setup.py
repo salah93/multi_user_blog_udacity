@@ -37,7 +37,7 @@ class Handler(webapp2.RequestHandler):
                 return name
             else:
                 raise(InvalidUserException)
-        except:
+        except InvalidUserException:
             self.redirect('/signup')
 
     def write(self, *a, **kw):
