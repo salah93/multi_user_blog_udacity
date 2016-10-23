@@ -8,19 +8,29 @@
 		{% endif %}
 	</span>
 	<h3><a href="/newpost">Submit a post</a></h3>
-		<button id="liked_posts" class="btn btn-default">Liked Posts</button>
-		<button id="all_posts" type="button" class="active btn btn-default">All Posts</button>
+        <div class="filter-btn">
+            <button id="liked_posts" class="btn btn-default">Liked Posts</button>
+            <button id="all_posts" class="active btn btn-default">All Posts</button>
+            <button id="my_posts" class="btn btn-default">My Posts</button>
+        </div>
 	{% for post in posts %}
-		<div class="post {{liked.get(post.key().id(), 'unliked')}}-div">
+			{% if user != post.author.username %}
+		<div class="post other-posts-div {{liked.get(post.key().id(), 'unliked')}}-div">
+            {% else %}
+		<div class="post unliked-div">
+            {% endif %}
 			<a href="/{{ post.key().id() }}">
                 <span class="title">{{ post.title }}</span> 
                 - 
                 <span class="author">{{ post.author.username }}</span>
             </a>
 			<p><i>{{ post.datetime }}</i></p>
-			<button author="{{ post.author.username }}" value="{{ post.key().id() }}" class="btn like-btn {{liked[post.key().id()]}}">{{liked.get(post.key().id(), 'like')}}</button>
-			<a class="edit" href="/edit/{{ post.key().id() }}">Edit/Delete</a>
-		<hr>
+			{% if user != post.author.username %}
+			    <button author="{{ post.author.username }}" value="{{ post.key().id() }}" class="btn btn-default like-btn {{liked[post.key().id()]}}">{{liked.get(post.key().id(), 'like')}}</button>
+            {% else %}
+				<a class="edit btn btn-default" href="/edit/{{ post.key().id() }}">Edit/Delete</a>
+			{% endif %}
+			<hr>
 		</div>
 	{% endfor %}
 {% endblock %}
@@ -45,16 +55,29 @@
 				});
 		});	
         
-		$('#liked_posts').click(function() {
-			$('.unliked-div').hide();
-			$(this).addClass('active')
-			$('#all_posts').removeClass('active')
-		});
-		$('#all_posts').click(function() {
-			$('.unliked-div').show();
-			$(this).addClass('active')
-			$('#liked_posts').removeClass('active')
-		});
-    
+        $('.filter-btn').click(function(button) {
+            var btnid = button.target.id
+            if (btnid == 'liked_posts') {
+                $('.other-posts-div').show();
+                $('.unliked-div').hide();
+                $(this).addClass('active')
+                $('#all_posts').removeClass('active')
+                $('#my_posts').removeClass('active')
+            }
+            else if (btnid == 'all_posts') {
+                $('.other-posts-div').show();
+                $('.unliked-div').show();
+                $(this).addClass('active')
+                $('#liked_posts').removeClass('active')
+                $('#my_posts').removeClass('active')
+            }
+            else if (btnid == 'my_posts') {
+                $('.unliked-div').show();
+                $('.other-posts-div').hide();
+                $(this).addClass('active')
+                $('#liked_posts').removeClass('active')
+                $('#all_posts').removeClass('active')
+            }
+        });
 	</script>
 {% endblock %}
