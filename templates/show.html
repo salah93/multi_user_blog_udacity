@@ -4,7 +4,8 @@
 	<a href="/welcome" class="btn btn-default">Home Page</a>
 		{% if error %}
 			<h1>{{error}}</h1>
-		{% elif post %}
+		{% endif %}
+		{% if post %}
 			{% if edit %}
 				<a href="/edit/{{post.key().id()}}" class="btn btn-default">Edit/Delete</a>
 			{% endif %}
@@ -19,22 +20,103 @@
 			<hr>
 			<h2>Comments</h2>
 			<div class="add-comment">
-				<form method="post">
-					<textarea rows=2 class="form-control" name="comment"></textarea>
-					<input class="form-control submit" type="submit">
-				</form>
+					<textarea pid="{{post.key().id()}}" rows=2 class="form-control" name="comment"></textarea>
+					<button name="add" class="btn btn-default">add comment</button>
 			</div>
 			<div class="comments-div">
 				{% for comment in comments %}
-					<hr>
 					<div class="comment">
-						<p>{{comment.body}}</p>
-						<p>by: {{comment.user.username}}</p>	
-						<i>{{comment.datetime}}</i>	
-					</div>	
+						<hr>
+						<div hidden class="update-comment">
+							<textarea pid="{{post.key().id()}}" cid="{{ comment.key().id() }}" rows=2 class="form-control" name="new-comment"></textarea>
+							<button class="btn btn-default edit" name="update">update</button>
+							<button class="btn btn-default delete" name="delete">delete</button>
+						</div>
+						<div class="view-comment">
+							<div class="comment-content">
+								<p class="body">{{comment.body}}</p>
+								<p class="username">by: {{comment.user.username}}</p>
+								 <i class="datetime">{{comment.datetime}}</i>
+							</div>
+							{% if edit %}
+								<button class="edit-comment btn btn-default">edit/delete comment</button>
+							{% endif %}
+						</div>
+					</div>
 				{% endfor %}
 			</div>
 		{% else %}
 			<h1>No post here buttface (_|_)</h1>
 		{% endif %}
 {% endblock %}
+			{% block scripts %}
+			<script>
+				$('.add-comment').click(function(data){
+					var button = $(data.target)
+					var textarea = $(this).find('textarea')
+					var content = textarea.val()
+					textarea.val("")
+					if (button.attr('name') == "add"){
+						$.ajax('/' + textarea.attr('pid'), {
+							method: "post",
+							dataType: "json",
+							data: {
+								'comment': content,
+								}
+							}).done(function(comments) {
+								var currUser = comments.currentUser
+								var comments = comments.comments
+								var l = comments.length
+								for (var i=0; i < l; i++) {
+									var html = "<div class='comment'><hr><div hidden class='update-comment'><textarea pid='" + textarea.attr('pid') + "' cid='" + comments[i].id + "' rows=2 class='form-control' name='new-comment'></textarea><button class='btn btn-default edit' name='update'>update</button><button class='btn btn-default delete' name='delete'>delete</button></div><div class='view-comment'><div class='comment-content'><p class='body'>" + comments[i].body + "</p><p class='username'>by: " + comments[i].username + "</p><i class='datetime'>" + comments[i].datetime + "</i></div>"
+									if (comments[i].username == currUser) {
+										html += "<button class='edit-comment btn btn-default'>edit/delete comment</button></div>"
+									}
+									else { 
+										html += "</div>"
+									}
+									$('.comments-div').prepend($(html));
+
+								}
+						});
+					}
+				});
+
+				$('.comments-div').click(function(data) {
+					var button = $(data.target)
+					var p = button.parent().parent()
+					var textarea = p.find('textarea')
+					var content = textarea.val()
+					var id = textarea.attr('cid')
+					if (button.hasClass('edit-comment')) {	
+						var content = button.prev().find('.body').text()
+						button.parent().hide()
+						button.parent().prev().show().find('textarea').val(content)
+					}
+				   else if (button.attr('name') =="update") {
+						$.ajax('/' + textarea.attr('pid'), {
+							method: "post",
+							dataType: "json",
+							data: {
+								'comment': content,
+								'id': id,
+								'update': true
+								}
+							}).done(function(result) {
+								// replace current comment with updated comment
+								p.find('.comment-content').html("<p class='body'>" + result.body + "</p><p class='username'>by:" + result.username + "</p><i class='datetime'>" + result.datetime + "</i>")
+								$('.view-comment').show()
+								$('.update-comment').hide()
+						});
+					}
+					else if (button.attr('name') == 'delete'){
+						$.post('/' + textarea.attr('pid'), {
+								'id': id,
+								'delete': true
+								}, function(result) {
+								p.remove()	
+						});
+					}
+				});
+			</script>
+			{% endblock %}

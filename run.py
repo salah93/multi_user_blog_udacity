@@ -1,6 +1,8 @@
 # - * - coding: utf-8 - *
 import hmac
+import json
 import re
+from datetime import datetime
 from models import User, Post, Like, Comment
 from setup import Handler, salt, webapp2
 
@@ -48,7 +50,7 @@ class Signup(Handler):
             hpass = hmac.new(salt, password).hexdigest()
             user = User(username=username, password=hpass, email=email)
             user.put()
-            return self.redirect('/welcome')
+            return self.redirect('/login')
 
 
 class Welcome(Handler):
@@ -90,10 +92,34 @@ class ShowPost(Handler):
         name = self.isvalid()
         user = User.all().filter('username =', name).get()
         post = Post.get_by_id(int(post_id))
-        c = self.request.get('comment').strip()
-        comment = Comment(user=user, post=post, body=c)
-        comment.put()
-        self.redirect('/' + post_id)
+        if self.request.get('update'):
+            cid = int(self.request.get('id'))
+            comment = Comment.get_by_id(cid)
+            comment.body = self.request.get('comment')
+            comment.put()
+            return self.write(json.dumps({'body': comment.body,
+                                          'datetime': str(comment.datetime),
+                                          'username': comment.user.username}))
+        elif self.request.get('delete'):
+            comment = Comment.get_by_id(int(self.request.get('id')))
+            comment.delete()
+            return self.write("success")
+        else:
+            user_comment = self.request.get('comment').strip()
+            timestamp = datetime.now()
+            comment = Comment(user=user, post=post, body=user_comment)
+            comment.put()
+            comments = Comment.all().filter('datetime >=', timestamp)
+            # datastore is sometimes slow to add objects to set
+            l = [c for c in comments if c != comment] + [comment]
+            return self.write(json.dumps({'comments': [{'body': c.body,
+                                                        'id': c.key().id(),
+                                                        'datetime':
+                                                            str(c.datetime),
+                                                        'username':
+                                                            c.user.username}
+                                                       for c in l],
+                                          'currentUser': name}))
 
 
 class EditPost(Handler):
