@@ -29,5 +29,5 @@ sed -e 's/application:.*$/application: '"$APPID"'/' app.yml > app.yml
 # local server
 /path/to/google_appengine/dev_appserver.py .
 # deploying app
-/path/to/google_appengine/appcfg.py -A $APPID -V v1 update ./
+/path/to/google_appengine/appcfg.py -V v1 update ./
 ```
