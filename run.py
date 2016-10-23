@@ -144,16 +144,24 @@ class EditPost(Handler):
         name = self.isvalid()
         post = Post.get_by_id(int(post_id))
         if post.author.username == name:
-            if self.request.get('delete'):
-                likes = Like.all().filter('post = ', post)
-                comments = Like.all().filter('post = ', post)
-                [l.delete() for l in likes]
-                [c.delete() for c in comments]
-                post.delete()
-            else:
-                post.post = self.request.get('post').strip()
-                post.title = self.request.get('title').strip()
-                post.put()
+            post.post = self.request.get('post').strip()
+            post.title = self.request.get('title').strip()
+            post.put()
+        else:
+            self.set_cookie(self.error_cookie, True)
+        self.redirect('/welcome')
+
+
+class DeletePost(Handler):
+    def post(self, post_id):
+        name = self.isvalid()
+        post = Post.get_by_id(int(post_id))
+        if post.author.username == name:
+            likes = Like.all().filter('post = ', post)
+            comments = Like.all().filter('post = ', post)
+            [l.delete() for l in likes]
+            [c.delete() for c in comments]
+            post.delete()
         else:
             self.set_cookie(self.error_cookie, True)
         self.redirect('/welcome')
@@ -169,8 +177,9 @@ class PostPage(Handler):
         title = self.request.get("subject")
         body = self.request.get("content")
         user = User.all().filter('username =', username).get()
-        post = Post(title=title, author=user, post=body)
-        post.put()
+        if user and body and title:
+            post = Post(title=title, author=user, post=body)
+            post.put()
         self.redirect("/welcome")
 
 
@@ -224,6 +233,7 @@ app = webapp2.WSGIApplication([(r'/?', Base),
                                (r'/newpost/?', PostPage),
                                (r'/([0-9]+)/?', ShowPost),
                                (r'/edit/([0-9]+)/?', EditPost),
+                               (r'/delete/([0-9]+)/?', DeletePost),
                                (r'/like/([0-9]+)/?', LikePost),
                                (r'/login/?', Login)],
                               debug=True)
