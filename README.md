@@ -19,15 +19,17 @@ threadsafe: true
 
 handlers:
 - url: /.*
-script: run.app
+  script: run.app
 
 libraries:
 - name: jinja2
-version: latest
+  version: latest
 EOF
 sed -e 's/application:.*$/application: '"$APPID"'/' temp.yml > app.yml
 rm temp.yml
 ```
+
+Assuming you inputted your [project id](#setup-environment) you can now view the app in the browser!@
 
 #### local server
 `/path/to/google_appengine/dev_appserver.py .`
