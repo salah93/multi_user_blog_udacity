@@ -1,4 +1,4 @@
-{% extends "logout.html" %}
+{% extends "like.html" %}
 
 {% block content %}
 	<h1>Welcome, <span class="user">{{ user }}</span>!</h1>
@@ -34,27 +34,8 @@
 		</div>
 	{% endfor %}
 {% endblock %}
-{% block scripts %}
+{% block like_scripts %}
 	<script>
-		$('.like-btn').click(function() {
-			var button = $(this)
-				$.post('/like/' + button.val(), function(data) {
-					if (data == 'success') {
-						button.toggleClass('liked')
-						if ( button.hasClass('liked') ) {
-							button.text("liked")	
-						}
-						else {
-							button.text("like")	
-						}
-						button.parent().toggleClass('unliked-div');
-					}
-					else {
-						$('.error').text("You can only like someone elses' posts!")
-					}
-				});
-		});	
-        
         $('.filter-btn').click(function(button) {
             var btn = $(button.target)
 			var btnid = button.target.id

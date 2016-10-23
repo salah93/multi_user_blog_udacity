@@ -1,4 +1,4 @@
-{% extends "logout.html" %}
+{% extends "like.html" %}
 
 {% block content %}
 	<a href="/welcome" class="btn btn-default">Home Page</a>
@@ -8,6 +8,10 @@
 		{% if post %}
 			{% if username == post.author.username %}
 				<a href="/edit/{{post.key().id()}}" class="btn btn-default">Edit/Delete</a>
+			{% else %}
+			    <button author="{{ post.author.username }}" value="{{ post.key().id() }}" class="btn btn-default like-btn {{liked}}">
+		{% if liked %}unlike{%else%}like{%endif%}
+</button>
 			{% endif %}
 			<div class="post">
 				<h1>{{ post.title }}</h1>
@@ -49,7 +53,7 @@
 			<h1>No post here buttface (_|_)</h1>
 		{% endif %}
 {% endblock %}
-			{% block scripts %}
+			{% block like_scripts %}
 			<script>
 				$('.add-comment').click(function(data){
 					var button = $(data.target)

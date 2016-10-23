@@ -76,12 +76,17 @@ class ShowPost(Handler):
     def get(self, post_id):
         name = self.isvalid()
         post = Post.get_by_id(int(post_id))
+        user = User.all().filter('username =', name).get()
         comments = Comment.all().filter('post =', post).order('-datetime')
         total_likes = Like.all().filter('post =', post).count()
+        liked = 'liked' if Like.all().filter(
+                            'post =', post).filter(
+                                'user =', user).get() else None
         if post:
             self.render("show.html",
                         post=post,
                         likes=total_likes,
+                        liked=liked,
                         username=name,
                         comments=comments)
         else:
