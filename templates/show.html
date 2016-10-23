@@ -2,11 +2,11 @@
 
 {% block content %}
 	<a href="/welcome" class="btn btn-default">Home Page</a>
-		{% if error %}
-			<h1>{{error}}</h1>
-		{% endif %}
+		<span class="error">
+			{% if error %} {{error}} {% endif %}
+		</span>
 		{% if post %}
-			{% if edit %}
+			{% if username == post.author.username %}
 				<a href="/edit/{{post.key().id()}}" class="btn btn-default">Edit/Delete</a>
 			{% endif %}
 			<div class="post">
@@ -38,7 +38,7 @@
 								<p class="username">by: {{comment.user.username}}</p>
 								 <i class="datetime">{{comment.datetime}}</i>
 							</div>
-							{% if edit %}
+							{% if comment.user.username == username  %}
 								<button class="edit-comment btn btn-default">edit/delete comment</button>
 							{% endif %}
 						</div>
@@ -104,9 +104,13 @@
 								}
 							}).done(function(result) {
 								// replace current comment with updated comment
-								p.find('.comment-content').html("<p class='body'>" + result.body + "</p><p class='username'>by:" + result.username + "</p><i class='datetime'>" + result.datetime + "</i>")
-								$('.view-comment').show()
-								$('.update-comment').hide()
+								if (result.error)
+									$('.error').html("You cannot edit other users' comments!")
+								else {
+									p.find('.comment-content').html("<p class='body'>" + result.body + "</p><p class='username'>by:" + result.username + "</p><i class='datetime'>" + result.datetime + "</i>")
+									$('.view-comment').show()
+									$('.update-comment').hide()
+								}
 						});
 					}
 					else if (button.attr('name') == 'delete'){
@@ -114,7 +118,10 @@
 								'id': id,
 								'delete': true
 								}, function(result) {
-								p.remove()	
+								if(result == "success")
+									p.remove()	
+								else
+									$('.error').html("You cannot edit other users' comments!")
 						});
 					}
 				});

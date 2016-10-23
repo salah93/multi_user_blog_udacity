@@ -78,12 +78,11 @@ class ShowPost(Handler):
         post = Post.get_by_id(int(post_id))
         comments = Comment.all().filter('post =', post).order('-datetime')
         total_likes = Like.all().filter('post =', post).count()
-        edit = True if post.author.username == name else False
         if post:
             self.render("show.html",
                         post=post,
                         likes=total_likes,
-                        edit=edit,
+                        username=name,
                         comments=comments)
         else:
             self.render("show.html", error="No post lives here :(")
@@ -93,17 +92,26 @@ class ShowPost(Handler):
         user = User.all().filter('username =', name).get()
         post = Post.get_by_id(int(post_id))
         if self.request.get('update'):
-            cid = int(self.request.get('id'))
-            comment = Comment.get_by_id(cid)
-            comment.body = self.request.get('comment')
-            comment.put()
-            return self.write(json.dumps({'body': comment.body,
-                                          'datetime': str(comment.datetime),
-                                          'username': comment.user.username}))
+            comment = Comment.get_by_id(int(self.request.get('id')))
+            if name == comment.user.username:
+                comment.body = self.request.get('comment')
+                comment.put()
+                return self.write(json.dumps({'body': comment.body,
+                                              'datetime':
+                                              str(comment.datetime),
+                                              'username':
+                                              comment.user.username}))
+            else:
+                # show error
+                self.write("forbidden access")
         elif self.request.get('delete'):
             comment = Comment.get_by_id(int(self.request.get('id')))
-            comment.delete()
-            return self.write("success")
+            if name == comment.user.username:
+                comment.delete()
+                return self.write("success")
+            else:
+                # show error
+                self.write("forbidden access")
         else:
             user_comment = self.request.get('comment').strip()
             timestamp = datetime.now()
