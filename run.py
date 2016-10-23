@@ -72,15 +72,16 @@ class Welcome(Handler):
 
 class ShowPost(Handler):
     def get(self, post_id):
-        self.isvalid()
-        pid = int(post_id)
-        post = Post.get_by_id(pid)
+        name = self.isvalid()
+        post = Post.get_by_id(int(post_id))
         comments = Comment.all().filter('post =', post).order('-datetime')
         total_likes = Like.all().filter('post =', post).count()
+        edit = True if post.author.username == name else False
         if post:
             self.render("show.html",
                         post=post,
                         likes=total_likes,
+                        edit=edit,
                         comments=comments)
         else:
             self.render("show.html", error="No post lives here :(")

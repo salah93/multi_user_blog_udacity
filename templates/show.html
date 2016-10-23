@@ -5,6 +5,9 @@
 		{% if error %}
 			<h1>{{error}}</h1>
 		{% elif post %}
+			{% if edit %}
+				<a href="/edit/{{post.key().id()}}" class="btn btn-default">Edit/Delete</a>
+			{% endif %}
 			<div class="post">
 				<h1>{{ post.title }}</h1>
 				<h5>{{likes}} like(s)</h5>
